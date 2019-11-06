@@ -1,3 +1,6 @@
+[HELP]
+message="change name to settings.txt and change settings"
+
 [LOGIN]
 id=example@example.com
 password=********

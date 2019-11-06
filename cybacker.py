@@ -14,7 +14,7 @@ import time
 # get login info
 
 config = configparser.ConfigParser()
-config.read('login.txt')
+config.read('settings.txt')
 id = config['LOGIN']['id']
 pwd = config['LOGIN']['password']
 
