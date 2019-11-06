@@ -1,2 +1,8 @@
-id=account@example.com
+[LOGIN]
+id=example@example.com
 password=********
+
+[HISTORY]
+until=today
+from=1999-01-01
+
