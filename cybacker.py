@@ -146,7 +146,6 @@ while syyyy >= 2018 and smm >= 9:
         post_hour = datestr[15:17]
         post_min = datestr[18:20]
         post_dtm = datetime.datetime(int(post_year), int(post_mon), int(post_day), int(post_hour), int(post_min))
-        print(post_dtm)
 
         title = driver.find_element_by_id('cyco-post-title').text
         text = driver.find_element_by_css_selector('body > div.content2 > section > div.dscr > section > div').text
