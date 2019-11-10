@@ -5,13 +5,14 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException
 
+from Post import Post
 
 import configparser
 import datetime
 import time
 
 
-# get login info
+# get login info from settings.txt
 
 config = configparser.ConfigParser()
 config.read('settings.txt')
@@ -24,7 +25,7 @@ pwd = config['LOGIN']['password']
 driver = webdriver.Chrome(executable_path=r"C:\Path\chromedriver.exe")
 
 
-# connect
+# connect to cyworld
 
 driver.get("https://cy.cyworld.com/cyMain")
 assert "cyworld" in driver.title
@@ -51,7 +52,7 @@ elem.send_keys(pwd)
 elem.send_keys(Keys.RETURN)
 
 
-# my page
+# go to my page
 
 ignored_exceptions=(StaleElementReferenceException,)
 wait = WebDriverWait(driver, 30, ignored_exceptions=ignored_exceptions)
@@ -59,24 +60,30 @@ elem = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'body > div.wrapp
 elem.send_keys(Keys.RETURN)
 
 
-# loop monthes - start from now and go back until 1998-12
+# prepare list to store posts
+postlist = []
+
+
+# get start date and end date of search
+# TODO - get user setting for search duration period (it's hard-coded at the moment)
 
 from_date=config['HISTORY']['from']
 until_date=config['HISTORY']['until']
 
 now = datetime.datetime.now()
 syyyy = now.year
-eyyyy = syyyy
 smm = now.month
+eyyyy = syyyy
 emm = smm + 1
 if emm == 13:
     emm = 1
     eyyyy += 1
 
-
-
+# wait for date search button to be ready
 elem = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR,'#all')))
 
+
+# loop monthes - start from now and go back until 1998-12
 
 while syyyy >= 2018 and smm >= 9:
     print('searching %d-%2d-02 to %d-%2d-01' % (syyyy, smm, eyyyy, emm) )
@@ -117,38 +124,43 @@ while syyyy >= 2018 and smm >= 9:
 
     # get number of posts to save
     # returning from each post makes the list stale, so we only get the total count for for loop
-
-    #elem = driver.find_element_by_class_name('list_timeline')
-    #posts = elem.find_elements_by_tag_name('li')
     count = len(driver.find_element_by_class_name('list_timeline').find_elements_by_tag_name('li'))
     
     #for post in posts:
     for i in range(count):
         # click each post
         # watch out! it's <html> inside an <iframe> element!  switch frames!
-        #elem = driver.find_element_by_class_name('list_timeline')
-        #posts = elem.find_elements_by_tag_name('li')
-        #post = posts[i]
-        #post.click()
         driver.find_element_by_class_name('list_timeline').find_elements_by_tag_name('li')[i].click()
         iframe = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'body > div.wrapper > article.container2.for_homenew_listgh > iframe')))
         driver.switch_to.frame(iframe)
 
-        # 파일로 저장..인데 잘은 안되네..
+        # saving page source directly isn't quite working.. 
         #with open('page.html', 'w', encoding='utf-8') as f:
         #    f.write(driver.page_source)
 
         # get content
-        date = driver.find_element_by_css_selector('body > div.content2 > section > div.view1 > p').text
+        datestr = driver.find_element_by_css_selector('body > div.content2 > section > div.view1 > p').text
+        post_year = datestr[4:8]
+        post_mon = datestr[9:11]
+        post_day = datestr[12:14]
+        post_hour = datestr[15:17]
+        post_min = datestr[18:20]
+        post_dtm = datetime.datetime(int(post_year), int(post_mon), int(post_day), int(post_hour), int(post_min))
+        print(post_dtm)
+
         title = driver.find_element_by_id('cyco-post-title').text
         text = driver.find_element_by_css_selector('body > div.content2 > section > div.dscr > section > div').text
         try:
-            img = driver.find_element_by_css_selector('body > div.content2 > section > div.dscr > section.post.imageBox.cyco-imagelet > figure > img').get_attribute('src')
-            urllib.urlretrieve(img, "test.png")
+            img = driver.find_element_by_css_selector('body > div.content2 > section > div.dscr > section.post.imageBox.cyco-imagelet > figure > img')
+            #img.screenshot('{:%Y-%m-%d_%H:%M}.png'.format(post_dtm) )
+            #urllib.urlretrieve(img.get_attribute('src'), "test.png")
         except:
             img = "no image"
 
-        print('%d (%s) [%s] {%s} <%s>\n' % (i, date, title, text, img))
+        #print('%d (%s-%s-%s %s:%s) [%s] {%s} <%s>\n' % (i, post_year, post_mon, post_day, post_hour, post_min, title, text, img.get_attribute('src')))
+
+        # save post
+        postlist.append( Post(post_dtm, title, text, img) )
 
         # go back to post list
         driver.switch_to.parent_frame()
@@ -170,7 +182,7 @@ while syyyy >= 2018 and smm >= 9:
     break
 
 
-# 
+# TODO save posts in postlist to appropriate format
 
 
 assert "No results found." not in driver.page_source
