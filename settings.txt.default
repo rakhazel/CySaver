@@ -3,8 +3,8 @@ step1="change this file name to settings.txt"
 step2="fill in settings below with your info"
 
 [LOGIN]
-id=example@example.com
-password=********
+계정=example@example.com
+암호=********
 
 [HISTORY]
 until=today
