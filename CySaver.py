@@ -15,9 +15,9 @@ import time
 # get login info from settings.txt
 
 config = configparser.ConfigParser()
-config.read('settings.txt')
-id = config['LOGIN']['id']
-pwd = config['LOGIN']['password']
+config.read('settings.txt',encoding='utf-8')
+id = config['LOGIN']['계정']
+pwd = config['LOGIN']['암호']
 
 
 # open browser
