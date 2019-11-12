@@ -22,7 +22,7 @@ pwd = config['LOGIN']['암호']
 
 # open browser
 
-driver = webdriver.Chrome(executable_path=r"C:\Path\chromedriver.exe")
+driver = webdriver.Chrome(executable_path=r".\chromedriver.exe")
 
 
 # connect to cyworld
@@ -54,8 +54,8 @@ elem.send_keys(Keys.RETURN)
 
 # go to my page
 
-ignored_exceptions=(StaleElementReferenceException,)
-wait = WebDriverWait(driver, 30, ignored_exceptions=ignored_exceptions)
+#ignored_exceptions=(StaleElementReferenceException,)
+wait = WebDriverWait(driver, 30)
 elem = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'body > div.wrapper.view_page_vers.view_page_vers2 > header > div > a.freak1')))
 elem.send_keys(Keys.RETURN)
 
@@ -124,6 +124,7 @@ while syyyy >= 2018 and smm >= 9:
 
     # get number of posts to save
     # returning from each post makes the list stale, so we only get the total count for for loop
+    # so, if a post is made during loop, there could be unsaved posts
     count = len(driver.find_element_by_class_name('list_timeline').find_elements_by_tag_name('li'))
     
     #for post in posts:
