@@ -133,14 +133,17 @@ while search_en >= st_dtm:
     driver.find_element_by_css_selector('#all').send_keys(Keys.RETURN) 
     
     # wait for result
-    elem = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'body > div.wrapper > article.container > div > section > p.txt_depthgh')))
+    time.sleep(1)
+    elem = wait.until(EC.visibility_of_element_located((By.CSS_SELECTOR, 'body > div.wrapper > article.container > div > section > p.txt_depthgh')))
     print(elem.text)
 
     # TODO fix when there are no search results
     # get number of posts to save
     # returning from each post makes the list stale, so we only get the total count for for loop
     # so, if a post is made during loop, there could be unsaved posts
-    count = len(driver.find_element_by_class_name('list_timeline').find_elements_by_tag_name('li'))
+    count=0
+    if len(driver.find_elements_by_class_name('list_timeline')) > 0:
+        count = len(driver.find_element_by_class_name('list_timeline').find_elements_by_tag_name('li'))
     print('count={}'.format(count))
     
     #for post in posts:
