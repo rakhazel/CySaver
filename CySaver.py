@@ -64,29 +64,44 @@ elem.send_keys(Keys.RETURN)
 postlist = []
 
 
-# get start date and end date of search
-# TODO - get user setting for search duration period (it's hard-coded at the moment)
+# get start date and end date of search from settings.txt
 
-from_date=config['HISTORY']['from']
-until_date=config['HISTORY']['until']
+st_date=config['HISTORY']['언제부터']
+en_date=config['HISTORY']['언제까지']
 
-now = datetime.datetime.now()
-syyyy = now.year
-smm = now.month
-eyyyy = syyyy
-emm = smm + 1
-if emm == 13:
-    emm = 1
-    eyyyy += 1
+st_yyyy=int(st_date[0:4])
+st_mm=int(st_date[5:7])
+st_dd=int(st_date[8:10])
+st_dtm=datetime.datetime(st_yyyy, st_mm, st_dd)
+#assert st_yyyy >= '1999' and st_yyyy <= '2020' and st_mm >= '01' and st_mm <= '12'
+
+if en_date == 'today':
+    en_dtm = datetime.datetime.now()
+else:
+    en_yyyy=int(en_date[0:4])
+    en_mm=int(en_date[5:7])
+    en_dd=int(en_date[8:10])
+    en_dtm=datetime.datetime(en_yyyy, en_mm, en_dd)
+
+
+#assert en_yyyy >= '1999' and en_yyyy <= '2020' and en_mm >= '01' and en_mm <= '12'
+
+print('{}년 {}월 {}일 부터 {}년 {}월 {}일까지 백업 해보도록 할게요.'.format(st_dtm.year, st_dtm.month, st_dtm.day, en_dtm.year, en_dtm.month, en_dtm.day)) 
+
+# get range for first search
+# search from first day of 언제까지 month to 언제까지 date.  if 언제까지 date is the first, then we'll just search 1 date
+search_en=en_dtm
+search_st=en_dtm.replace(day=1)
+
 
 # wait for date search button to be ready
 elem = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR,'#all')))
 
 
-# loop monthes - start from now and go back until 1998-12
+# loop search
 
-while syyyy >= 2018 and smm >= 9:
-    print('searching %d-%2d-02 to %d-%2d-01' % (syyyy, smm, eyyyy, emm) )
+while search_en >= st_dtm:
+    print('{}-{}-{} 부터 {}-{}-{} 까지 백업 시도 중'.format(search_st.year, search_st.month, search_st.day, search_en.year, search_en.month, search_en.day) )
 
     # open date search
     driver.find_element_by_css_selector('#all').send_keys(Keys.RETURN)
@@ -96,22 +111,22 @@ while syyyy >= 2018 and smm >= 9:
     # from
     elem = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR,'#sDate')))
     elem.click()
-    elem.send_keys(syyyy)
+    elem.send_keys(str(search_st.year))
     elem.send_keys(Keys.ARROW_LEFT)
-    elem.send_keys('02')
+    elem.send_keys(str(search_st.day))
     elem.send_keys(Keys.ARROW_LEFT)
     elem.send_keys(Keys.ARROW_LEFT)
-    elem.send_keys(smm)
+    elem.send_keys(str(search_st.month))
 
     # to
     elem = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR,'#eDate')))
     elem.click()
-    elem.send_keys(eyyyy)
+    elem.send_keys(str(search_en.year))
     elem.send_keys(Keys.ARROW_LEFT)
-    elem.send_keys('01')
+    elem.send_keys(str(search_en.day))
     elem.send_keys(Keys.ARROW_LEFT)
     elem.send_keys(Keys.ARROW_LEFT)
-    elem.send_keys(emm)
+    elem.send_keys(str(search_en.month))
 
     # search and close 
     driver.find_element_by_css_selector('#allArea > div > div > button').send_keys(Keys.RETURN)
@@ -121,11 +136,12 @@ while syyyy >= 2018 and smm >= 9:
     elem = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'body > div.wrapper > article.container > div > section > p.txt_depthgh')))
     print(elem.text)
 
-
+    # TODO fix when there are no search results
     # get number of posts to save
     # returning from each post makes the list stale, so we only get the total count for for loop
     # so, if a post is made during loop, there could be unsaved posts
     count = len(driver.find_element_by_class_name('list_timeline').find_elements_by_tag_name('li'))
+    print('count={}'.format(count))
     
     #for post in posts:
     for i in range(count):
@@ -171,18 +187,16 @@ while syyyy >= 2018 and smm >= 9:
 
 
     # prev month
-    eyyyy = syyyy
-    emm = smm
+    # search_st day should be 1, so subtracting 1 day should get last day of prev month
+    search_en = search_st - datetime.timedelta(days=1)
+    search_st = search_en.replace(day=1)
 
-    smm -= 1
-    if smm == 0:
-        smm = 12
-        syyyy -= 1
-
-    break
+    #break
 
 
 # TODO save posts in postlist to appropriate format
+for post in postlist:
+    print('({}) [{}] {} <{}>'.format(post.dtm, post.title, post.text, post.img))
 
 
 assert "No results found." not in driver.page_source
