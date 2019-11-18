@@ -1,7 +1,7 @@
 class Post:
-    def __init__(self, dtm, title, text, img):
+    def __init__(self, dtm, title, text, imgs):
         self.dtm = dtm
         self.title = title
         self.text = text
-        self.img = img
+        self.imgs = imgs
         
