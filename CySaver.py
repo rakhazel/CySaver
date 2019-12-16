@@ -209,15 +209,19 @@ def main():
             # image is optional.  save list just in case
             # TODO - don't screenshot when no img
             imgs = driver.find_elements_by_css_selector('body > div.content2 > section > div.dscr > section.post.imageBox.cyco-imagelet > figure > img')
+            img_names = []
+            img_idx = 0
             print('image count = {}'.format(len(imgs)))
-            img_idx=0
             for img in imgs:
-                img_idx += 1
-                #img.screenshot('{:%Y-%m-%d_%H:%M}_{}.png'.format(post_dtm, img_idx) )
+                if img.size["height"] > 0 and img.size["width"] > 0:
+                    img_idx += 1
+                    img_name = '{:%Y-%m-%d_%H_%M}_{}.png'.format(post_dtm, img_idx)
+                    img.screenshot(img_name)
+                    img_names.append(img_name)
             #urllib.urlretrieve(img.get_attribute('src'), "test.png")
 
             # save post
-            postlist.append( Post(post_dtm, title, text, img_idx) )
+            postlist.append( Post(post_dtm, title, text, img_names) )
 
             # go back to post list
             driver.switch_to.parent_frame()
@@ -262,12 +266,12 @@ def writefile(post):
     post_file_str = '<html><body><h1>{}</h1><p>{}</p>'.format(post.title, post.text)
 
     # save images
-    img_idx=0
-    while img_idx < post.imgs:
-        img_idx += 1
-        post_file_str += '<img src={}_{}.png>'.format(post_file_prefix, img_idx)
+    for img in post.imgs:
+        post_file_str += '<img src={}>'.format(img)
 
-    post_file = open(post_file_name, "a")
+    print('writing to file [{}] content [{}]'.format(post_file_name, post_file_str))
+
+    post_file = open(post_file_name, "a+")
     post_file.write(post_file_str)
     post_file.close()
 
